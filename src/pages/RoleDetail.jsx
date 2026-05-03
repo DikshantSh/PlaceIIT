@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
+import RoleCard from '../components/RoleCard.jsx'
 
 export default function RoleDetail() {
   const { slug } = useParams()
@@ -10,12 +11,27 @@ export default function RoleDetail() {
   const [tab, setTab] = useState('overview')
   const [expanded, setExpanded] = useState(false)
 
-  if (!role) return <div className="container" style={{ padding: '80px 0', textAlign: 'center' }}><h2>Role not found</h2><button className="btn btn--primary" onClick={() => navigate('/roles')}>Browse Roles</button></div>
+  if (!role) return <div className="container page-transition" style={{ padding: '80px 0', textAlign: 'center' }}><h2>Role not found</h2><button className="btn btn--primary" onClick={() => navigate('/roles')}>Browse Roles</button></div>
 
   const isBookmarked = bookmarks.includes(role.id)
   const isComparing = compareList.includes(role.id)
   const showINRTooltip = role.currency !== 'INR'
   const inrValue = showINRTooltip ? ctcToINR(role.ctc, role.currency) : null
+
+  // Compute similar roles based on skills Jaccard similarity
+  const currentSkills = new Set(role.skills)
+  const similarRoles = roles
+    .filter(r => r.id !== role.id && r.skills.length > 0)
+    .map(r => {
+      const rSkills = new Set(r.skills)
+      const intersection = [...currentSkills].filter(x => rSkills.has(x)).length
+      const union = new Set([...currentSkills, ...rSkills]).size
+      const similarity = intersection / (union || 1)
+      return { ...r, similarity }
+    })
+    .filter(r => r.similarity > 0)
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 3)
 
   const compRows = [
     ['Base Salary', role.baseSalary],
@@ -28,7 +44,7 @@ export default function RoleDetail() {
   ].filter(([, v]) => v > 0)
 
   return (
-    <div className="role-detail" id="role-detail">
+    <div className="role-detail page-transition" id="role-detail">
       <button className="role-detail__back" onClick={() => navigate(-1)}>← Back</button>
 
       <div className="role-detail__header">
@@ -133,6 +149,13 @@ export default function RoleDetail() {
             </div>
           )}
         </>
+      {similarRoles.length > 0 && (
+        <div style={{ marginTop: 'var(--sp-12)', borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-8)' }}>
+          <h3 style={{ fontSize: 'var(--fs-lg)', marginBottom: 'var(--sp-4)' }}>Similar Roles Based on Skills</h3>
+          <div className="roles-grid">
+            {similarRoles.map(r => <RoleCard key={r.id} role={r} />)}
+          </div>
+        </div>
       )}
     </div>
   )

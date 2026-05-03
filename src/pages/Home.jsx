@@ -1,13 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import RoleCard from '../components/RoleCard.jsx'
+
+function useCountUp(end, duration = 2000) {
+  const [count, setCount] = useState(0)
+  
+  useEffect(() => {
+    if (!end) return;
+    let startTime = null;
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setCount(Math.floor(ease * end));
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    requestAnimationFrame(animate);
+  }, [end, duration]);
+  
+  return count;
+}
 
 export default function Home() {
   const { roles, stats, dispatch, formatINR } = useApp()
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
   const topRoles = roles.slice(0, 6)
+
+  const countCompanies = useCountUp(stats.totalCompanies)
+  const countRoles = useCountUp(stats.totalRoles)
+  const countAvg = useCountUp(stats.avgCTC)
+  const countMax = useCountUp(stats.maxCTC)
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -22,7 +48,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className="page-transition">
       <section className="hero" id="hero">
         <div className="container">
           <h1 className="hero__title">
@@ -57,19 +83,19 @@ export default function Home() {
       <section className="container">
         <div className="stats" id="stats-bar">
           <div className="stat-card">
-            <div className="stat-card__value">{stats.totalCompanies}</div>
+            <div className="stat-card__value">{countCompanies}</div>
             <div className="stat-card__label">Companies</div>
           </div>
           <div className="stat-card">
-            <div className="stat-card__value">{stats.totalRoles}</div>
+            <div className="stat-card__value">{countRoles}</div>
             <div className="stat-card__label">Roles</div>
           </div>
           <div className="stat-card">
-            <div className="stat-card__value">{formatINR(stats.avgCTC)}</div>
+            <div className="stat-card__value">{formatINR(countAvg)}</div>
             <div className="stat-card__label">Avg CTC</div>
           </div>
           <div className="stat-card">
-            <div className="stat-card__value">{formatINR(stats.maxCTC)}</div>
+            <div className="stat-card__value">{formatINR(countMax)}</div>
             <div className="stat-card__label">Highest CTC</div>
           </div>
         </div>
@@ -84,6 +110,6 @@ export default function Home() {
           {topRoles.map(role => <RoleCard key={role.id} role={role} />)}
         </div>
       </section>
-    </>
+    </div>
   )
 }

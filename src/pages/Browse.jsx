@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext.jsx'
 import RoleCard from '../components/RoleCard.jsx'
 
@@ -7,16 +8,57 @@ const ITEMS_PER_PAGE = 24
 export default function Browse() {
   const { filteredRoles, filters, searchQuery, sortBy, dispatch, roles } = useApp()
   const [page, setPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    const q = searchParams.get('q'); const sort = searchParams.get('sort'); const minCTC = searchParams.get('minCTC');
+    const maxCGPA = searchParams.get('maxCGPA'); const tag = searchParams.get('tag'); const bond = searchParams.get('bond');
+    const backlog = searchParams.get('backlog'); const company = searchParams.get('company'); const p = searchParams.get('page');
+
+    if (q) dispatch({ type: 'SET_SEARCH', payload: q })
+    if (sort) dispatch({ type: 'SET_SORT', payload: sort })
+    if (minCTC) dispatch({ type: 'SET_FILTER', key: 'ctcMin', value: Number(minCTC) })
+    if (maxCGPA) dispatch({ type: 'SET_FILTER', key: 'cgpaMax', value: Number(maxCGPA) })
+    if (tag) dispatch({ type: 'SET_FILTER', key: 'roleTag', value: tag })
+    if (company) dispatch({ type: 'SET_FILTER', key: 'company', value: company })
+    if (bond !== null) dispatch({ type: 'SET_FILTER', key: 'bondOnly', value: bond === 'true' ? true : bond === 'false' ? false : null })
+    if (backlog === 'true') dispatch({ type: 'SET_FILTER', key: 'backlogEligible', value: true })
+    if (p) setPage(Number(p))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (searchQuery) params.set('q', searchQuery)
+    if (sortBy !== 'ctc-desc') params.set('sort', sortBy)
+    if (filters.ctcMin > 0) params.set('minCTC', filters.ctcMin)
+    if (filters.cgpaMax < 10) params.set('maxCGPA', filters.cgpaMax)
+    if (filters.roleTag) params.set('tag', filters.roleTag)
+    if (filters.company) params.set('company', filters.company)
+    if (filters.bondOnly !== null) params.set('bond', filters.bondOnly)
+    if (filters.backlogEligible) params.set('backlog', 'true')
+    if (page > 1) params.set('page', page)
+    setSearchParams(params, { replace: true })
+  }, [searchQuery, sortBy, filters, page, setSearchParams])
+
   const totalPages = Math.ceil(filteredRoles.length / ITEMS_PER_PAGE)
   const paged = filteredRoles.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   const setFilter = (key, value) => { dispatch({ type: 'SET_FILTER', key, value }); setPage(1) }
 
   return (
-    <div className="container">
+    <div className="container page-transition">
+      <button className="fab-filter" onClick={() => setIsSidebarOpen(true)}>
+        ⚙️ Filters
+      </button>
+
       <div className="browse-layout">
-        <aside className="filters-sidebar" id="filters-sidebar">
-          <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 700 }}>Filters</h3>
+        {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
+        <aside className={`filters-sidebar ${isSidebarOpen ? 'filters-sidebar--open' : ''}`} id="filters-sidebar">
+          <div className="sidebar-header-mobile">
+            <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 700 }}>Filters</h3>
+            <button className="btn-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
+          </div>
 
           <div className="filter-group">
             <label className="filter-group__label">Search</label>
