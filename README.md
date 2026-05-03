@@ -99,9 +99,10 @@ type Role = {
    ```
 
 3. **Generate the clean dataset:**
-   Place your raw `company_details.json` in the root directory (outside `/src`), then run:
+   Since real placement data is private, a dummy dataset is provided. Copy the sample file to the root directory to generate the required `roles.json`:
    ```bash
-   node scripts/transform.js
+   cp sample_company_details.json company_details.json
+   npm run data:sync
    ```
 
 4. **Start the development server:**
