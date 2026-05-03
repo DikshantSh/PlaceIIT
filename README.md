@@ -10,6 +10,14 @@ PlaceIIT is a high-performance, client-side placement dashboard that transforms 
 
 ---
 
+## 🎯 Problem Statement
+
+The official university ERP portal for campus placements is notoriously difficult to navigate. It presents hundreds of job descriptions in dense, unformatted tables, making it nearly impossible for students to compare compensation structures side-by-side, filter by their specific CGPA, or track which companies have service bonds. 
+
+PlaceIIT solves this by scraping the raw, messy ERP data and presenting it in a modern, blazingly fast, and highly visual dashboard, allowing students to make informed career decisions without the friction.
+
+---
+
 ## 🚀 Features
 
 - **Blazing Fast Search & Filtering:** Instantly filter 600+ roles by CTC, CGPA, bond duration, and role tags (Super Dream, Dream, Core) using client-side indexing.
